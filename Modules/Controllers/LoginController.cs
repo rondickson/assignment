@@ -1,4 +1,4 @@
-﻿using CSC317PassManagerP2Starter.Modules.Models;
+using CSC317PassManagerP2Starter.Modules.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,28 +10,45 @@ namespace CSC317PassManagerP2Starter.Modules.Controllers
     public enum AuthenticationError { NONE, INVALIDUSERNAME, INVALIDPASSWORD }
     public class LoginController
     {
+        private UserModel user;
 
-        /*
-         * This class is incomplete.  Fill in the method definitions below.
-         */
-        private User _user = new User();
-        private bool _loggedIn = false;
+        public enum AuthenticationError { NONE, INVALIDUSERNAME, INVALIDPASSWORD }
 
-        public User? CurrentUser
+        public LoginController()
         {
-            get
+            // Create a dummy user for testing
+            var (key, iv) = PasswordCrypto.GenKey();
+            user = new UserModel
             {
-                //Returns a copy of the user data.  Currently returning null.
-                return null;
-            }
+                ID = 1,
+                FirstName = "John",
+                LastName = "Doe",
+                UserName = "test",
+                PasswordHash = PasswordCrypto.GetHash("ab1234"),
+                Key = key,
+                IV = iv
+            };
         }
 
         public AuthenticationError Authenticate(string username, string password)
         {
-            //determines whether the inputted username/password matches the stored
-            //username/password.  currently returns a NONE error status.
+            if (user.UserName != username)
+                return AuthenticationError.INVALIDUSERNAME;
+
+            var inputHash = PasswordCrypto.GetHash(password);
+            if (!PasswordCrypto.CompareBytes(user.PasswordHash, inputHash))
+                return AuthenticationError.INVALIDPASSWORD;
+
             return AuthenticationError.NONE;
         }
+
+        public UserModel GetCurrentUser()
+        {
+            return user;
+        }
+
+
+        
     }
 
 }
