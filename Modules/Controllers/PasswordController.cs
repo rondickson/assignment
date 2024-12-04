@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -12,51 +12,71 @@ namespace CSC317PassManagerP2Starter.Modules.Controllers
 {
     public class PasswordController
     {
-        //Stores a list of sample passwords for the test user.
-        public List<PasswordModel> _passwords = new List<PasswordModel>();
+        private List<PasswordModel> passwords = new List<PasswordModel>();
         private int counter = 1;
 
-
-        /*
-         * The following functions need to be completed.
-         */
-        //Used to copy the passwords over to the Row Binders.
-        public void PopulatePasswordView(ObservableCollection<PasswordRow> source, string search_criteria = "")
+        public void GenTestPasswords()
         {
-            //Complete definition of PopulatePasswordView here.
+            passwords.Add(new PasswordModel { ID = counter++, UserID = 1, PlatformName = "Facebook", PlatformUserName = "fbuser", PasswordText = PasswordCrypto.Encrypt("password123", App.login_controller.GetCurrentUser().Key, App.login_controller.GetCurrentUser().IV) });
         }
 
-        //CRUD operations for the password list.
+        // PasswordController
+        // PasswordController
         public void AddPassword(string platform, string username, string password)
         {
-            //Complete definition of AddPassword here.
+            var currentUser = App.login_controller.GetCurrentUser();
+            passwords.Add(new PasswordModel
+            {
+                ID = counter++,
+                UserID = currentUser.ID,
+                PlatformName = platform,
+                PlatformUserName = username,
+                PasswordText = PasswordCrypto.Encrypt(password, currentUser.Key, currentUser.IV) // Adjust here
+            });
         }
 
-        public PasswordModel? GetPassword(int ID)
-        {
-           //Complete definition of GetPassword here.
 
-            return null;
+
+
+
+        public PasswordModel GetPassword(int ID)
+        {
+            return passwords.FirstOrDefault(p => p.ID == ID);
         }
 
-        public bool UpdatePassword(PasswordModel changes)
+        public bool UpdatePassword(PasswordModel updatedPassword)
         {
-           //Complete definition of Update Password here.
+            var existing = passwords.FirstOrDefault(p => p.ID == updatedPassword.ID);
+            if (existing == null) return false;
 
-            return false;
+            existing.PlatformName = updatedPassword.PlatformName;
+            existing.PlatformUserName = updatedPassword.PlatformUserName;
+            existing.PasswordText = updatedPassword.PasswordText;
+
+            return true;
         }
 
         public bool RemovePassword(int ID)
         {
-           //Complete definition of Remove Password here.
+            var password = passwords.FirstOrDefault(p => p.ID == ID);
+            if (password == null) return false;
 
-            return false;
+            passwords.Remove(password);
+            return true;
         }
 
-        public void GenTestPasswords()
+        public void PopulatePasswordView(ObservableCollection<PasswordRow> source, string searchCriteria = null)
         {
-            //Generate a set of random passwords for the test user.
-            //Called in Password List Page.
+            source.Clear();
+            foreach (var password in passwords)
+            {
+                if (string.IsNullOrEmpty(searchCriteria) ||
+                    password.PlatformName.Contains(searchCriteria, StringComparison.OrdinalIgnoreCase) ||
+                    password.PlatformUserName.Contains(searchCriteria, StringComparison.OrdinalIgnoreCase))
+                {
+                    source.Add(new PasswordRow(password));
+                }
+            }
         }
     }
 }
