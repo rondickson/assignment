@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -15,129 +15,83 @@ using CSC317PassManagerP2Starter.Modules.Models;
  */
 namespace CSC317PassManagerP2Starter.Modules.Views
 {
-    public class PasswordRow : BindableObject, INotifyPropertyChanged
+    public class PasswordRow : INotifyPropertyChanged
     {
-        private PasswordModel _pass;
-        private bool _isVisible = false;
-        private bool _editing = false;
+        private PasswordModel pass;
+        private bool isVisible;
+        private bool editing;
 
         public PasswordRow(PasswordModel source)
         {
-            _pass = source;
+            pass = source;
+            isVisible = false;
+            editing = false;
         }
 
-        //Create your Binding Properties here, which should reflect the front-end bindings.
-        //See the example of "Platform" below.
-        public string Platform
+        public string PlatformName
         {
-            get
-            {
-                //complete getter for Platform.  currenly returns an empty string. 
-                return "";
-            }
+            get => pass.PlatformName;
             set
             {
-                //complete setter for Platform.
-
-                //This needs to be called for updating the binding when
-                //the platform name is edited.  Leave here.
-                RefreshRow();
+                pass.PlatformName = value;
+                OnPropertyChanged(nameof(PlatformName));
             }
         }
 
         public string PlatformUserName
         {
-            get
-            {
-                //Complete getter for User Name.
-                return "";
-            }
+            get => pass.PlatformUserName;
             set
             {
-                //complete setter for User Name.
-                RefreshRow();
+                pass.PlatformUserName = value;
+                OnPropertyChanged(nameof(PlatformUserName));
             }
         }
 
+        // PasswordRow.cs
         public string PlatformPassword
         {
             get
             {
-               //complete getter for Password.  Currenly returns "hidden."
-               //This should return the actual password is the Show toggle
-               //is true.
-               //note that the password should be decrypted using the user's
-               //encryption key before being shown.
-               return "<hidden>";
+                var currentUser = App.login_controller.GetCurrentUser();
+                return isVisible ? PasswordCrypto.Decrypt(pass.PasswordText) : "<hidden>";
             }
             set
             {
-                //complete setter for password.  Note that this ONLY changes the password
-                //stored in the row.  The password should not be committed to the model
-                //data until save is clicked.
-
-
-                RefreshRow();
+                pass.PasswordText = PasswordCrypto.Encrypt(value);
+                OnPropertyChanged(nameof(PlatformPassword));
             }
         }
 
-        public int PasswordID
-        {
-            get
-            {
-                //complete getter for the pass ID.  Is binded to the edit/save/copy/delete buttons.
-                //currently returns -1;
-                return -1;
-            }
-        }
+
+
+        public int PasswordID => pass.ID;
 
         public bool IsShown
         {
-            get
-            {
-                //complete getter for IsShown, which is binded to the Show Password
-                //toggle/switch.
-                return false;
-            }
+            get => isVisible;
             set
             {
-                //complete setter for IsShown.
-                RefreshRow();
+                isVisible = value;
+                OnPropertyChanged(nameof(IsShown));
             }
         }
 
         public bool Editing
         {
-            get
-            {
-                //Complete getter for Editing, which is toggled when the "edit/save" button
-                //is clicked.  
-                return false;
-            }
+            get => editing;
             set
             {
-                //Complete setter for Editing.
-                RefreshRow();
+                editing = value;
+                OnPropertyChanged(nameof(Editing));
             }
         }
 
+        public void RefreshRow() => OnPropertyChanged(string.Empty);
 
-        //This is called when a bound property is changed on the front-end.  Causes the 
-        //front-end to update the collection view.
-        private void RefreshRow()
-        {
-            OnPropertyChanged(nameof(Platform));
-            OnPropertyChanged(nameof(PlatformUserName));
-            OnPropertyChanged(nameof(PlatformPassword));
-            OnPropertyChanged(nameof(IsShown));
-            OnPropertyChanged(nameof(Editing));
-        }
+        public void SavePassword() => App.password_controller.UpdatePassword(pass);
 
-        public void SavePassword()
-        {
-            //Is called when the "save" button is clicked.  Saves the changes to the
-            //password to the model data.
-        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
-
 }
